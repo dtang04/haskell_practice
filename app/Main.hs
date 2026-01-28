@@ -1,4 +1,5 @@
 module Main where
+import GHC.Arr (accum)
 
 dedup :: Eq a => [a] -> [a]
 dedup [] = []
@@ -49,6 +50,14 @@ dropWhileEnd f lst = reverse (go f [] True reverseLst)
             | f x == True && status == True = go f acc status xs
             | otherwise                     = go f (acc ++ [x]) False xs
 
+isSubsequence :: Eq a => [a] -> [a] -> Bool
+isSubsequence [] _ = True
+isSubsequence _ [] = False
+isSubsequence (x:xs) (y:ys)
+    | x == y = isSubsequence xs ys
+    | x /= y = isSubsequence (x:xs) ys
+    | otherwise = False
+        
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -56,3 +65,4 @@ main = do
     print (scanl' (+) 0 [1,2,3,4])
     print (map' (*2) [1,2,3,4])
     print (dropWhileEnd (== 0) [1,2,3,0,0])
+    print (isSubsequence "abc" "aebdc")
