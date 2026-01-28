@@ -70,6 +70,14 @@ reverse'' lst = foldl build [] lst
     where
         build acc x = x : acc
 
+partition' :: (a -> Bool) -> [a] -> ([a], [a])
+partition' _ [] = ([], [])
+partition' f lst = foldl build ([], []) lst
+    where
+        build (pass, fail) x
+            | f x == True = (pass ++ [x], fail)
+            | otherwise   = (pass, fail ++ [x])
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -80,3 +88,4 @@ main = do
     print (isSubsequence "abc" "aebdc")
     print (reverse' [1,2,3,4,5])
     print (reverse'' [5,6,7,8,9])
+    print (partition' even [1..10])
