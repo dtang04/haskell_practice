@@ -78,6 +78,18 @@ partition' f lst = foldl build ([], []) lst
             | f x == True = (pass ++ [x], fail)
             | otherwise   = (pass, fail ++ [x])
 
+zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
+zipWith' _ [] _ = []
+zipWith' _ _ [] = []
+zipWith' f (x:xs) (y:ys) = f x y : (zipWith' f xs ys)
+
+zipWithLeftOverLst1 :: (a -> b -> a) -> [a] -> [b] -> [a]
+-- notice that to keep the left over elements from lst1, f must be a -> b -> a
+-- The return type of zipWithLeftOverLst1 is [a], not [c]
+zipWithLeftOverLst1 _ [] _ = []
+zipWithLeftOverLst1 _ lst1 [] = lst1
+zipWithLeftOverLst1 f (x:xs) (y:ys) = f x y : (zipWithLeftOverLst1 f xs ys)
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -89,3 +101,6 @@ main = do
     print (reverse' [1,2,3,4,5])
     print (reverse'' [5,6,7,8,9])
     print (partition' even [1..10])
+    print (zipWith' (*) [1,2,3] [4,5,6,7])
+    print (zipWith' (*) [1,2,4,5,6] [4,5,6,7])
+    print (zipWithLeftOverLst1 (*) [1,2,3,4,5] [10,20])
