@@ -39,9 +39,20 @@ map' f lst = reverse (foldl build [] lst)
     where
         build acc a = f a : acc
 
+dropWhileEnd :: (a -> Bool) -> [a] -> [a]
+dropWhileEnd _ [] = []
+dropWhileEnd f lst = reverse (go f [] True reverseLst)
+    where
+        reverseLst = reverse lst
+        go _ acc _ [] = acc
+        go f acc status (x:xs)
+            | f x == True && status == True = go f acc status xs
+            | otherwise                     = go f (acc ++ [x]) False xs
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
     print (splitWhen (== ',') "a,b,")
     print (scanl' (+) 0 [1,2,3,4])
     print (map' (*2) [1,2,3,4])
+    print (dropWhileEnd (== 0) [1,2,3,0,0])
