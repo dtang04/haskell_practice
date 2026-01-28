@@ -57,7 +57,19 @@ isSubsequence (x:xs) (y:ys)
     | x == y = isSubsequence xs ys
     | x /= y = isSubsequence (x:xs) ys
     | otherwise = False
-        
+
+reverse' :: [a] -> [a]
+reverse' [] = []
+reverse' lst = foldr build [] lst
+    where
+        build x acc = acc ++ [x]
+
+reverse'' :: [a] -> [a]
+reverse'' [] = []
+reverse'' lst = foldl build [] lst
+    where
+        build acc x = x : acc
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -66,3 +78,5 @@ main = do
     print (map' (*2) [1,2,3,4])
     print (dropWhileEnd (== 0) [1,2,3,0,0])
     print (isSubsequence "abc" "aebdc")
+    print (reverse' [1,2,3,4,5])
+    print (reverse'' [5,6,7,8,9])
