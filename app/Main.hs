@@ -23,7 +23,7 @@ scanl' f z lst = reverse (foldl build [z] lst)
         build (b:bs) x = f b x : b : bs
 -- foldl: (b -> a -> b) -> b -> [a] -> b
 -- build: [b] -> a -> [b]
--- Here, b is the accumulator type, a is the element type of the list.
+-- Here, b is the accumulator type, a is the next element of the list.
 -- What is the accumulator here?
 -- The accumulator is the list of results we have built so far, starting with [z].
 -- How do we know what build is?
@@ -32,8 +32,16 @@ scanl' f z lst = reverse (foldl build [z] lst)
 --                               -> build [1,0] 2 -> [3,1,0]
 --                               -> build [3,1,0] 3 -> [6,3,1,0]
 --                               -> reverse [6,3,1,0] -> [0,1,3,6]
+
+map' :: (a -> b) -> [a] -> [b]
+map' _ [] = []
+map' f lst = reverse (foldl build [] lst)
+    where
+        build acc a = f a : acc
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
     print (splitWhen (== ',') "a,b,")
     print (scanl' (+) 0 [1,2,3,4])
+    print (map' (*2) [1,2,3,4])
