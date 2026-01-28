@@ -1,6 +1,7 @@
 module Main where
 import GHC.Arr (accum)
 
+-- Function Exercises
 dedup :: Eq a => [a] -> [a]
 dedup [] = []
 dedup [x] = [x]
@@ -90,6 +91,20 @@ zipWithLeftOverLst1 _ [] _ = []
 zipWithLeftOverLst1 _ lst1 [] = lst1
 zipWithLeftOverLst1 f (x:xs) (y:ys) = f x y : (zipWithLeftOverLst1 f xs ys)
 
+-- Value Constructors
+data Point = Point Int Int deriving (Show)
+-- Declare a new type with data Point (LHS)
+-- Instantiate new Point constructor (RHS)
+
+addPoints :: Point -> Point -> Point
+addPoints (Point x1 y1) (Point x2 y2) = Point (x1 + x2 ) (y1 + y2)
+
+addListPoints :: [Point] -> Point
+addListPoints lst = go lst (Point 0 0)
+    where
+        go [] acc = acc
+        go (p:ps) acc = go ps (addPoints acc p)
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -104,3 +119,5 @@ main = do
     print (zipWith' (*) [1,2,3] [4,5,6,7])
     print (zipWith' (*) [1,2,4,5,6] [4,5,6,7])
     print (zipWithLeftOverLst1 (*) [1,2,3,4,5] [10,20])
+    print (addPoints (Point 1 2) (Point 3 4))
+    print (addListPoints [Point 1 2, Point 3 4, Point 5 6])
