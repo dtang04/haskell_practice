@@ -129,13 +129,13 @@ newtype Box state a = Box a deriving (Show)
 -- A phantom type allows us to encode extra information in the type definition (e.g. Unlocked vs Locked)
 
 createLock :: a -> Box Locked a
-createLock = Box 
+createLock = Box
 -- originally lock x = Box x, but we can eta-reduce
 -- Since a isn't of type Box, no unwrapping needs to be done. We simply wrap a to be Box a.
 -- The type signature enforces Box a to be Box Locked a.
 
 unlockBox :: Box Locked a -> Box Unlocked a
-unlockBox (Box x) = Box x 
+unlockBox (Box x) = Box x
 -- checks if a was created with the Box value constructor, unwrap a, returns Box a. 
 -- The type signature enforces Box a to be Box Unlocked a.
 
@@ -152,9 +152,27 @@ unlockBox' (Box x) (Key y) key
 -- We unwrap x to change the Box from Locked to Unlocked if y == k
 -- We return an unlocked Box containing a.  We wrap with Maybe because we return Nothing if the key is not correct.
 
-
 lockBox :: Box Unlocked a -> Box Locked a
 lockBox (Box x) = Box x
+
+data Fresh
+data Used
+
+newtype Token state = Token String deriving (Show)
+
+newToken :: String -> Token Fresh
+newToken = Token --originally newToken x = Token x
+
+useToken :: Token Fresh -> Token Used
+useToken (Token x) = Token x
+
+tokenValue :: Token Used -> String
+tokenValue (Token k) = k
+
+compareTokens :: Token Used -> Token Used -> Bool
+compareTokens (Token a) (Token b)
+    | a == b    = True
+    | otherwise = False
 
 main :: IO ()
 main = do
@@ -179,4 +197,11 @@ main = do
         box = Box "secret" :: Box Locked String -- Cast Box to Box Locked String
     print (unlockBox' box k "hello")
     print (unlockBox' box k "wrong key")
-    
+    let
+        t1 = Token "token1" :: Token Fresh
+        t2 = Token "token2" :: Token Fresh
+        t1' = useToken t1
+        t2' = useToken t2
+    print(tokenValue t1')
+    print(tokenValue t2')
+    print(compareTokens t1' t2')
