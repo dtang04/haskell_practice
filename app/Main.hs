@@ -91,10 +91,12 @@ zipWithLeftOverLst1 _ [] _ = []
 zipWithLeftOverLst1 _ lst1 [] = lst1
 zipWithLeftOverLst1 f (x:xs) (y:ys) = f x y : (zipWithLeftOverLst1 f xs ys)
 
--- Value Constructors
+-- Types
+
 data Point = Point Int Int deriving (Show)
 -- Declare a new type with data Point (LHS)
 -- Instantiate new Point constructor (RHS)
+-- Point on LHS is a value constructor, Point on RHS is a type constructor
 
 addPoints :: Point -> Point -> Point
 addPoints (Point x1 y1) (Point x2 y2) = Point (x1 + x2 ) (y1 + y2)
@@ -105,15 +107,54 @@ addListPoints lst = go lst (Point 0 0)
         go [] acc = acc
         go (p:ps) acc = go ps (addPoints acc p)
 
--- Type Constructors
 data Result a
     = Ok a | Err String deriving (Show)
 --When Haskell creates a Type constructor (Result), 
 --it automatically creates value constructors for all values (Ok, Err)
 
 mapResult :: (a -> b) -> Result a -> Result b
-mapResult _ (Err a) = Err a --checks if a was created with the Err constructor
-mapResult f (Ok a) = Ok (f a) --checks if a was created with the Ok constructor
+mapResult _ (Err a) = Err a --checks if a was created with the Err value constructor, unwrap a, and return Err a
+mapResult f (Ok a) = Ok (f a) --checks if a was created with the Ok value constructor, unwrap a, and return Ok (f a)
+
+-- Polymorphic Constructors
+data Unlocked
+data Locked
+
+newtype Box state a = Box a deriving (Show)
+-- data: Multiple constructors allowed, multiple fields allowed (e.g Point x y)
+-- newtype: Shorthand of data, one constructor (box), one field (a)
+-- Since a can be any type, we say that Box is a polymorphic type
+-- LHS is a type constructor, RHS is a value constructor
+-- state is a phantom type. A phantom type exists on the LHS but not the RHS.
+-- A phantom type allows us to encode extra information in the type definition (e.g. Unlocked vs Locked)
+
+createLock :: a -> Box Locked a
+createLock = Box 
+-- originally lock x = Box x, but we can eta-reduce
+-- Since a isn't of type Box, no unwrapping needs to be done. We simply wrap a to be Box a.
+-- The type signature enforces Box a to be Box Locked a.
+
+unlockBox :: Box Locked a -> Box Unlocked a
+unlockBox (Box x) = Box x 
+-- checks if a was created with the Box value constructor, unwrap a, returns Box a. 
+-- The type signature enforces Box a to be Box Unlocked a.
+
+newtype Key a = Key String deriving (Show)
+-- Here, a is a phantom type. 
+-- An unwrapped Key must be a string.
+
+unlockBox' :: Box Locked a -> Key b -> String -> Maybe (Box Unlocked a)
+unlockBox' (Box x) (Key y) key
+    | y == key = Just (Box x)
+    | otherwise = Nothing
+-- a is an object with any type, b is a phantom type.
+-- We unwrap y to access the string, and compare with a string.
+-- We unwrap x to change the Box from Locked to Unlocked if y == k
+-- We return an unlocked Box containing a.  We wrap with Maybe because we return Nothing if the key is not correct.
+
+
+lockBox :: Box Unlocked a -> Box Locked a
+lockBox (Box x) = Box x
 
 main :: IO ()
 main = do
@@ -133,3 +174,9 @@ main = do
     print (addListPoints [Point 1 2, Point 3 4, Point 5 6])
     print (mapResult (+1) (Ok 3))
     print (mapResult (+1) (Err "Error"))
+    let 
+        k = Key "hello" :: Key () -- () fills the phantom parameter
+        box = Box "secret" :: Box Locked String -- Cast Box to Box Locked String
+    print (unlockBox' box k "hello")
+    print (unlockBox' box k "wrong key")
+    
