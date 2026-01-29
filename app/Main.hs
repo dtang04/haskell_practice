@@ -105,6 +105,16 @@ addListPoints lst = go lst (Point 0 0)
         go [] acc = acc
         go (p:ps) acc = go ps (addPoints acc p)
 
+-- Type Constructors
+data Result a
+    = Ok a | Err String deriving (Show)
+--When Haskell creates a Type constructor (Result), 
+--it automatically creates value constructors for all values (Ok, Err)
+
+mapResult :: (a -> b) -> Result a -> Result b
+mapResult _ (Err a) = Err a --checks if a was created with the Err constructor
+mapResult f (Ok a) = Ok (f a) --checks if a was created with the Ok constructor
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -121,3 +131,5 @@ main = do
     print (zipWithLeftOverLst1 (*) [1,2,3,4,5] [10,20])
     print (addPoints (Point 1 2) (Point 3 4))
     print (addListPoints [Point 1 2, Point 3 4, Point 5 6])
+    print (mapResult (+1) (Ok 3))
+    print (mapResult (+1) (Err "Error"))
