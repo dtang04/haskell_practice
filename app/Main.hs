@@ -201,6 +201,35 @@ checkSame f (Distance m) =
 -- Case does pattern matching based on the type.
 -- Guards refine the pattern further
 
+metersEqual :: Distance Meters -> Distance Meters -> Bool
+metersEqual a b = 
+    case (a, b) of
+        --case pattern matching of two vars, a b
+        (Distance x, Distance y) | x == y -> True
+        _                                 -> False
+
+isZero :: Distance u -> Bool
+isZero (Distance a)
+    | a == 0        = True
+    | otherwise     = False
+
+pairwiseEqualMeters :: [Distance Feet] -> [Distance Meters] -> Bool
+pairwiseEqualMeters [] [] = True
+pairwiseEqualMeters [] _ = False
+pairwiseEqualMeters _ [] = False
+pairwiseEqualMeters f m
+    | length f == length m = 
+        let 
+            bool_lst = zipWith checkSame f m 
+        in go bool_lst
+    | otherwise = False
+    where 
+        --where must come at the end of the function definition, not in between guards
+            go [] = True
+            go (b:bs)
+                | b == False = False
+                | otherwise  = go bs 
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -229,11 +258,15 @@ main = do
         t2 = Token "token2" :: Token Fresh
         t1' = useToken t1
         t2' = useToken t2
-    print(tokenValue t1')
-    print(tokenValue t2')
-    print(compareTokens t1' t2')
+    print (tokenValue t1')
+    print (tokenValue t2')
+    print (compareTokens t1' t2')
     let
         dist1 = Distance 1 :: Distance Feet
         dist2 = Distance 0.3048 :: Distance Meters
-    print(add (feetToMeters dist1) dist2)
-    print(checkSame dist1 dist2)
+        dist3 = Distance 0.3048 :: Distance Meters
+    print (add (feetToMeters dist1) dist2)
+    print (checkSame dist1 dist2)
+    print (metersEqual dist2 dist3)
+    print (isZero dist1)
+    print (pairwiseEqualMeters [Distance 1, Distance 2] [Distance 0.3048, Distance 0.6096])
