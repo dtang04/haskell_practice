@@ -1,7 +1,7 @@
 module Main where
 import GHC.Arr (accum)
 import qualified Data.Set as S
-import Data.Char (toLower)
+import Data.Char (toLower, isDigit)
 
 -- Function Exercises
 dedup :: Eq a => [a] -> [a]
@@ -348,6 +348,43 @@ filterPositives :: [(Double, Double)] -> [(Double, Double)]
 filterPositives [] = []
 filterPositives assocList = filterAssocList assocList (0, 0)
 
+isPrime :: Int -> Bool
+isPrime 1 = False
+isPrime 2 = True
+isPrime x = go x 2
+    where
+        go x acc
+            | acc >= x - 1      = True
+            | x `mod` acc == 0  = False
+            | otherwise         = go x (acc+1)
+
+isPrimeFilter :: [Int] -> [Int]
+isPrimeFilter = filter isPrime
+
+checkDigit :: String -> Bool
+checkDigit [] = False
+checkDigit (x:xs) 
+    | isDigit x  = True
+    | otherwise  = checkDigit xs
+
+filter' :: [String] -> [Int]
+filter' [] = []
+filter' lst = 
+    let
+        lst' = map (map toLower) lst
+        lst'' = filter (\x -> length x >= 3) lst'
+        lst''' = map length (filter (not . checkDigit) lst'')
+    in filter isPrime lst'''
+        
+-- Takes a list of strings
+-- Converts each string to lowercase
+-- Removes any string that:
+    -- is shorter than 3 characters
+    -- contains a digit
+-- Converts each remaining string to its length
+-- Keeps only lengths that are prime numbers
+
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -415,3 +452,5 @@ main = do
         assocList2 = [(-1, -1), (-2, 5), (0, 0), (1, 1), (3, 4), (-7, 2)]
     print (filterAssocList assocList1 ("c", 4))
     print (filterPositives assocList2)
+    print (isPrimeFilter [1..100])
+    print (filter' ["Hi", "Hello2", "WORLD", "abc", "abcd", "Abcdefg"])
