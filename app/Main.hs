@@ -253,6 +253,8 @@ instance Eq (Distance u) where
         case (x, y) of
             (Distance x, Distance y) | x Prelude.== y -> True
             _                                 -> False
+-- General syntax: instance Typeclass Type where
+-- Operation declaration needs to be enveloped by (), e.g. (==)
 
 main :: IO ()
 main = do
