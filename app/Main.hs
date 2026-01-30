@@ -336,7 +336,17 @@ listtoLowerLargeWords lst =
     let
         largeWords = filter (\x -> length x > 3) lst
     in map (map toLower) largeWords
--- \x -  \ is the lambda function declaration, x is the argument
+-- \x - \ is the lambda function declaration, x is the argument
+
+filterAssocList :: (Ord a, Ord b) => [(a, b)] -> (a, b) -> [(a, b)]
+filterAssocList [] _ = []
+filterAssocList (x:xs) y
+    | x > y         = x:filterAssocList xs y -- use 2-tuple comparison
+    | otherwise     = filterAssocList xs y
+
+filterPositives :: [(Double, Double)] -> [(Double, Double)]
+filterPositives [] = []
+filterPositives assocList = filterAssocList assocList (0, 0)
 
 main :: IO ()
 main = do
@@ -400,3 +410,8 @@ main = do
     print add1Set
     print (listtoLower ["abcD", "a", "b", "C", "abCEdf", "abc"])
     print (listtoLowerLargeWords ["abcD", "a", "b", "C", "abCEdf", "abc"])
+    let
+        assocList1 = [("a", 1), ("b", 2), ("c", 3), ("d", 4), ("e", 5)]
+        assocList2 = [(-1, -1), (-2, 5), (0, 0), (1, 1), (3, 4), (-7, 2)]
+    print (filterAssocList assocList1 ("c", 4))
+    print (filterPositives assocList2)
