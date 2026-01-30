@@ -174,6 +174,33 @@ compareTokens (Token a) (Token b)
     | a == b    = True
     | otherwise = False
 
+data Meters
+data Feet
+
+newtype Distance unit = Distance Double deriving (Show)
+
+meters :: Double -> Distance Meters
+meters = Distance
+
+feet :: Double -> Distance Feet
+feet = Distance
+
+add :: Distance p -> Distance p -> Distance p 
+--the phantom type (p) enforces that distances added must be either 
+--Distance Meters + Distance Meters or Distance Feet + Distance Feet
+add (Distance a) (Distance b) = Distance(a + b) 
+    
+feetToMeters :: Distance Feet -> Distance Meters
+feetToMeters (Distance a) = Distance (a * 0.3048)
+
+checkSame :: Distance Feet -> Distance Meters -> Bool
+checkSame f (Distance m) = 
+    case feetToMeters f of 
+        Distance f | f == m -> True
+        _                    -> False
+-- Case does pattern matching based on the type.
+-- Guards refine the pattern further
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -205,3 +232,8 @@ main = do
     print(tokenValue t1')
     print(tokenValue t2')
     print(compareTokens t1' t2')
+    let
+        dist1 = Distance 1 :: Distance Feet
+        dist2 = Distance 0.3048 :: Distance Meters
+    print(add (feetToMeters dist1) dist2)
+    print(checkSame dist1 dist2)
