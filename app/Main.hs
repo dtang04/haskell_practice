@@ -121,6 +121,12 @@ lookupifEven' a lst =
 -- If we want to force the association list to only have Int values, just change the type signature to 
 -- Eq a => a -> [(a, Int)] -> Maybe Int (force b to not be any type)
 
+lookupKV :: (Eq a, Eq b) => a -> b -> [(a,b)] -> Maybe (a,b)
+lookupKV _ _ [] = Nothing
+lookupKV a b ((k,v):xs)
+    | a == k && b == v  = Just (a,b)
+    | otherwise         = lookupKV a b xs
+
 -- Types
 
 data Point = Point Int Int deriving (Show)
@@ -328,4 +334,5 @@ main = do
     print (lookup' "d" [("a", 1), ("b", 2), ("c", 3), ("d", 4)])
     print (lookupifEven' "a" [("a", 1), ("b", 2), ("c", 3), ("d", 4)])
     print (lookupifEven' "b" [("a", 1), ("b", 2), ("c", 3), ("d", 4)])
+    print (lookupKV "a" 1 [("a", 1), ("b", 2), ("c", 3), ("d", 4)])
     -- print (Distance (sqrt (-1)) < dist4)
