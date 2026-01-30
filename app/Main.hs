@@ -1,5 +1,7 @@
 module Main where
 import GHC.Arr (accum)
+import qualified Data.Set as S
+import Data.Char (toLower)
 
 -- Function Exercises
 dedup :: Eq a => [a] -> [a]
@@ -307,6 +309,35 @@ instance (Ord a, Ord b) => Ord (Pair a b) where
 instance (Show a, Show b) => Show (Pair a b) where
     show (Pair (a, b)) = "(" ++ Prelude.show a ++ ", " ++ Prelude.show b ++ ")" 
 
+-- Sets
+s :: S.Set Int
+
+-- The name followed by "::" typically denotes the type of the object
+
+-- Set Functions
+s = S.fromList [1,2,2,2,3,3,3]
+s' = S.insert 4 s
+isIn = S.member 4 s'
+lst = S.toList s'
+onlyEvensSet = S.filter even s'
+add1Set = S.map (+1) s'
+
+-- Exercises
+listtoLower :: [String] -> [String]
+listtoLower [] = []
+listtoLower x = map (map toLower) x
+
+-- listtoLower (x:xs) = map toLower x : listtoLower xs
+-- map toLower is String -> String
+-- the outer map maps the inner (map toLower) to every element in the List
+listtoLowerLargeWords :: [String] -> [String]
+listtoLowerLargeWords [] = []
+listtoLowerLargeWords lst =
+    let
+        largeWords = filter (\x -> length x > 3) lst
+    in map (map toLower) largeWords
+-- \x -  \ is the lambda function declaration, x is the argument
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -361,4 +392,11 @@ main = do
     print (Pair (4, 5) < Pair (4, 6))
     print (Pair ("a", "b") > Pair ("c", "d"))
     print (Pair ("a", "b"))
-    -- print (Distance (sqrt (-1)) < dist4)
+    print s
+    print s'
+    print isIn
+    print lst
+    print onlyEvensSet
+    print add1Set
+    print (listtoLower ["abcD", "a", "b", "C", "abCEdf", "abc"])
+    print (listtoLowerLargeWords ["abcD", "a", "b", "C", "abCEdf", "abc"])
