@@ -266,7 +266,7 @@ pairwiseEqualMeters f m
                 | b == False = False
                 | otherwise  = go bs 
 
-newtype Pair a b = Pair (a, b) deriving (Show)
+newtype Pair a b = Pair (a, b)
 -- We need to specify a b on the LHS (while we didn't for Distance)
 -- This is because a and b are polymorphic types, while Distance just took in Double
 -- General rule: Any unspecified types associated with the new type, either phantom or polymorphic, must be declared on the LHS.
@@ -303,6 +303,9 @@ instance (Ord a, Ord b) => Ord (Pair a b) where
             (Pair (a, b), Pair (a', b')) | a Prelude.== a' && b > b' -> GT
             (Pair (a, b), Pair (a', b')) | a Prelude.== a' && b == b' -> EQ
             _                                                         -> error "error"
+
+instance (Show a, Show b) => Show (Pair a b) where
+    show (Pair (a, b)) = "(" ++ Prelude.show a ++ ", " ++ Prelude.show b ++ ")" 
 
 main :: IO ()
 main = do
@@ -357,4 +360,5 @@ main = do
     print (Pair (3, 4) == Pair (3, 4))
     print (Pair (4, 5) < Pair (4, 6))
     print (Pair ("a", "b") > Pair ("c", "d"))
+    print (Pair ("a", "b"))
     -- print (Distance (sqrt (-1)) < dist4)
