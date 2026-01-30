@@ -266,14 +266,17 @@ pairwiseEqualMeters f m
                 | b == False = False
                 | otherwise  = go bs 
 
--- Instances
+newtype Pair a b = Pair (a, b) deriving (Show)
+-- We need to specify a b on the LHS (while we didn't for Distance)
+-- This is because a and b are polymorphic types, while Distance just took in Double
+-- General rule: Any unspecified types associated with the new type, either phantom or polymorphic, must be declared on the LHS.
+
+-- Typeclasses
 instance Eq (Distance u) where
     (==) x y = 
         case (x, y) of
             (Distance x, Distance y) | x Prelude.== y -> True
             _                                 -> False
--- General syntax: instance Typeclass Type where
--- Operation declaration needs to be enveloped by (), e.g. (==)
 
 instance Ord (Distance u) where
     -- compare :: Ord a => a -> a -> Ordering
@@ -284,6 +287,22 @@ instance Ord (Distance u) where
             (Distance x, Distance y) | x Prelude.== y -> EQ
             (Distance x, Distance y) | x Prelude.> y  -> GT
             _                                         -> error "error"
+
+instance (Eq a, Eq b) => Eq (Pair a b) where
+    (==) (Pair (a, b)) (Pair (a', b'))
+        |  a Prelude.== a' && b Prelude.== b' = True
+        |  otherwise                          = False
+    
+    
+instance (Ord a, Ord b) => Ord (Pair a b) where
+    compare x y = 
+        case (x, y) of
+            (Pair (a, _), Pair (a', _)) | a Prelude.< a' -> LT
+            (Pair (a, _), Pair (a', _)) | a Prelude.> a' -> GT
+            (Pair (a, b), Pair (a', b')) | a Prelude.== a' && b < b' -> LT
+            (Pair (a, b), Pair (a', b')) | a Prelude.== a' && b > b' -> GT
+            (Pair (a, b), Pair (a', b')) | a Prelude.== a' && b == b' -> EQ
+            _                                                         -> error "error"
 
 main :: IO ()
 main = do
@@ -335,4 +354,7 @@ main = do
     print (lookupifEven' "a" [("a", 1), ("b", 2), ("c", 3), ("d", 4)])
     print (lookupifEven' "b" [("a", 1), ("b", 2), ("c", 3), ("d", 4)])
     print (lookupKV "a" 1 [("a", 1), ("b", 2), ("c", 3), ("d", 4)])
+    print (Pair (3, 4) == Pair (3, 4))
+    print (Pair (4, 5) < Pair (4, 6))
+    print (Pair ("a", "b") > Pair ("c", "d"))
     -- print (Distance (sqrt (-1)) < dist4)
