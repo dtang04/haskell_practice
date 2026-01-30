@@ -256,6 +256,16 @@ instance Eq (Distance u) where
 -- General syntax: instance Typeclass Type where
 -- Operation declaration needs to be enveloped by (), e.g. (==)
 
+instance Ord (Distance u) where
+    -- compare :: Ord a => a -> a -> Ordering
+    -- data Ordering = LT | EQ | GT
+    compare x y =
+        case (x, y) of
+            (Distance x, Distance y) | x Prelude.< y  -> LT
+            (Distance x, Distance y) | x Prelude.== y -> EQ
+            (Distance x, Distance y) | x Prelude.> y  -> GT
+            _                                         -> error "error"
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -300,4 +310,6 @@ main = do
     print (zipSafe [1,2,3] ['a','b','c'])
     print (zipSafe [1,2,3,4] ['a','b','c'])
     print (dist2 == dist3) -- testing overriding (==) for distance classes
-    print(dist3 == dist4)
+    print (dist3 == dist4)
+    print (dist3 < dist4)
+    -- print (Distance (sqrt (-1)) < dist4)
