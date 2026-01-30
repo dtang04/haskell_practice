@@ -91,6 +91,14 @@ zipWithLeftOverLst1 _ [] _ = []
 zipWithLeftOverLst1 _ lst1 [] = lst1
 zipWithLeftOverLst1 f (x:xs) (y:ys) = f x y : (zipWithLeftOverLst1 f xs ys)
 
+zipSafe :: [a] -> [b] -> Maybe [(a,b)]
+zipSafe a b = go a b []
+    where
+        go [] [] acc = Just (reverse acc)
+        go [] _ _ = Nothing
+        go _ [] _ = Nothing
+        go (a:as) (b:bs) acc = go as bs ((a,b):acc)
+
 -- Types
 
 data Point = Point Int Int deriving (Show)
@@ -270,3 +278,5 @@ main = do
     print (metersEqual dist2 dist3)
     print (isZero dist1)
     print (pairwiseEqualMeters [Distance 1, Distance 2] [Distance 0.3048, Distance 0.6096])
+    print (zipSafe [1,2,3] ['a','b','c'])
+    print (zipSafe [1,2,3,4] ['a','b','c'])
