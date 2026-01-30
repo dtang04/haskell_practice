@@ -99,6 +99,15 @@ zipSafe a b = go a b []
         go _ [] _ = Nothing
         go (a:as) (b:bs) acc = go as bs ((a,b):acc)
 
+
+find' :: (a -> Bool) -> [a] -> Maybe a
+find' _ [] = Nothing
+find' f (s:xs)
+    |   f s == True = Just s
+    |   otherwise   = find' f xs
+
+
+
 -- Types
 
 data Point = Point Int Int deriving (Show)
@@ -232,11 +241,18 @@ pairwiseEqualMeters f m
         in go bool_lst
     | otherwise = False
     where 
-        --where must come at the end of the function definition, not in between guards
+        -- where must come at the end of the function definition, not in between guards
             go [] = True
             go (b:bs)
                 | b == False = False
                 | otherwise  = go bs 
+
+-- Instances
+instance Eq (Distance u) where
+    (==) x y = 
+        case (x, y) of
+            (Distance x, Distance y) | x Prelude.== y -> True
+            _                                 -> False
 
 main :: IO ()
 main = do
@@ -273,6 +289,7 @@ main = do
         dist1 = Distance 1 :: Distance Feet
         dist2 = Distance 0.3048 :: Distance Meters
         dist3 = Distance 0.3048 :: Distance Meters
+        dist4 = Distance 1 :: Distance Meters
     print (add (feetToMeters dist1) dist2)
     print (checkSame dist1 dist2)
     print (metersEqual dist2 dist3)
@@ -280,3 +297,5 @@ main = do
     print (pairwiseEqualMeters [Distance 1, Distance 2] [Distance 0.3048, Distance 0.6096])
     print (zipSafe [1,2,3] ['a','b','c'])
     print (zipSafe [1,2,3,4] ['a','b','c'])
+    print (dist2 == dist3) -- testing overriding (==) for distance classes
+    print(dist3 == dist4)
