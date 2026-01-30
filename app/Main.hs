@@ -106,7 +106,20 @@ find' f (s:xs)
     |   f s == True = Just s
     |   otherwise   = find' f xs
 
+lookup' :: Eq a => a -> [(a,b)] -> Maybe b
+lookup' _ [] = Nothing
+lookup' a ((k,v):xs)
+    | a == k     = Just v
+    | otherwise  = lookup' a xs
 
+lookupifEven' :: (Eq a, Integral b) => a -> [(a, b)] -> Maybe b
+lookupifEven' a lst = 
+    case lookup' a lst of
+        Just k | even k -> Just k
+        _               -> Nothing
+-- Require b to be of Integral Typeclass so even can work correctly (even expects an integral)
+-- If we want to force the association list to only have Int values, just change the type signature to 
+-- Eq a => a -> [(a, Int)] -> Maybe Int (force b to not be any type)
 
 -- Types
 
@@ -312,4 +325,7 @@ main = do
     print (dist2 == dist3) -- testing overriding (==) for distance classes
     print (dist3 == dist4)
     print (dist3 < dist4)
+    print (lookup' "d" [("a", 1), ("b", 2), ("c", 3), ("d", 4)])
+    print (lookupifEven' "a" [("a", 1), ("b", 2), ("c", 3), ("d", 4)])
+    print (lookupifEven' "b" [("a", 1), ("b", 2), ("c", 3), ("d", 4)])
     -- print (Distance (sqrt (-1)) < dist4)
