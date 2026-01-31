@@ -478,6 +478,39 @@ sum3 x y z = (+) <$> ((+) <$> x <*> y) <*> z
 -- (+) <$> ((+) <$> x <*> y) creates the partial function (+ ((+) <$> x <*> y)): Just (\x y -> (+) <$> x <*> y) + z)
 -- (+) <$> ((+) <$> x <*> y) <*> z applies the partial function to z
 
+keepRight :: Maybe a -> Maybe b -> Maybe b
+keepRight = (*>) -- keepRight x y = (*>) x y
+
+mulAdd :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe Int
+mulAdd x y = liftA2 (*) (liftA2 (+) x y)
+-- Equivalent to: 
+-- mulAdd x y z = liftA2 (*) (liftA2 (+) x y) z
+-- or (+) <$> ((*) <$> x <*> y) <*> z
+
+makeUser :: Either String String -> Either String Int -> Either String (String, Int)
+makeUser = liftA2 (,)
+-- makeUser x y = liftA2 (,) x y 
+-- equivalent to (,) <$> x <*> y
+
+data Validation e a
+    = Failure e
+    | Success a 
+    deriving (Show)
+
+instance Functor (Validation e) where
+    fmap _ (Failure x) = Failure x
+    fmap f (Success a) = Success (f a)
+
+instance Semigroup e => Applicative (Validation e) where
+    pure = Success
+    Success f <*> Success a = Success (f a)
+    Success _ <*> Failure a = Failure a
+    Failure f <*> Success _ = Failure f
+    Failure f <*> Failure a = Failure (f <> a) -- <> belongs to Semigroup and allows us to concatenate elements of the same type
+
+pairV :: Validation [String] a -> Validation [String] b -> Validation [String] (a,b)
+pairV = liftA2 (,) --pairV a b = liftA2 (a b)
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -570,3 +603,11 @@ main = do
     print (raiseToList (Just 3))
     print (sum3 (Just 1) (Just 2) (Just 3))
     print (sum3 (Just 1) (Just 2) Nothing) --Nothing because fmap of a partially applied function, in this case (+) <$> ((+) <$> x <*> y), to Nothing is Nothing
+    print (keepRight (Just 1) (Just 2))
+    print (mulAdd (Just 2) (Just 7) (Just 15))
+    print (makeUser (Right "a") (Right 15))
+    print (makeUser (Left "err") (Right 15))
+    let
+        v1 = Failure ["err1"] :: Validation [String] Int
+        v2 = Failure ["err2"] :: Validation [String] Int
+    print (pairV v1 v2)
