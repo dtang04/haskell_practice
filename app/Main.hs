@@ -1,3 +1,4 @@
+{-# LANGUAGE InstanceSigs #-}
 module Main where
 import GHC.Arr (accum)
 import qualified Data.Set as S
@@ -384,6 +385,34 @@ filter' lst =
 -- Converts each remaining string to its length
 -- Keeps only lengths that are prime numbers
 
+-- Functors
+newtype Box' a = Box' a deriving (Show)
+
+instance Functor Box' where
+    fmap f (Box' a) = Box' (f a)
+-- Box is * -> * (polymorphic to polymorphic)
+
+newtype Pair' a b = Pair' (a,b) deriving (Show)
+
+instance Functor (Pair' a) where
+    fmap f (Pair' (x,y)) = Pair'(x, f y)
+-- Pair is * -> * -> *, need to get to * -> *
+-- So the type signature is is Pair' a, which is * -> *. 
+-- We can still unwrap Pair' to get y though because the type (Pair' a) is different from how a pair is constructed, Pair' (a,b)
+
+data Tree a
+    = Leaf a
+    | Node (Tree a) (Tree a) deriving (Show)
+-- Tree is a * -> *
+
+instance Functor Tree where
+    fmap :: (a -> b) -> Tree a -> Tree b
+    fmap f (Leaf a) = Leaf (f a)
+    fmap f (Node l r) = Node (fmap f l) (fmap f r)
+
+-- Can only match data constructors, not type constructors
+-- So, Node (Tree x) (Tree y) will raise compile errors
+-- We can only unpack at the Node level
 
 main :: IO ()
 main = do
@@ -454,3 +483,12 @@ main = do
     print (filterPositives assocList2)
     print (isPrimeFilter [1..100])
     print (filter' ["Hi", "Hello2", "WORLD", "abc", "abcd", "Abcdefg"])
+    print ((*2) <$> Box' 4)
+    print ((+1) <$> Pair' (4, 5))
+    let
+        t =                                      --     Node
+            Node                                 --    /    \
+                (Leaf 1)                         --  Leaf 1  Node 2
+                (Node (Leaf 2) (Leaf 3))         --           /  \
+                                                 --        Leaf2 Leaf3                
+    print ((*7) <$> t)
