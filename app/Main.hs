@@ -438,6 +438,46 @@ instance Functor (AssocEither a b) where
             go ((a, Left b):xs) acc = go xs ((a, Left b):acc)
             go ((a, Right c):xs) acc = go xs ((a, Right (f c)):acc)
 
+-- Applicatives
+
+-- Functors via fmap can convert some x to a space in f x. However, f is an ordinary function.
+-- What happens if we want to apply a function g that is in the space of f x? -> Use applicatives
+
+-- Ex. Functor
+addOne :: Maybe Int -> Maybe Int
+addOne x = (+1) <$> x
+
+-- Ex. Applicative
+addTwoElems :: Maybe Int -> Maybe Int -> Maybe Int
+addTwoElems x y = (+) <$> x <*> y
+-- (+) <$> x - Get a partially applied function of type Maybe (Int -> Int)
+-- So, we then apply this function to y. Notice that (+) <$> is in the space of f y, so we use an Applicative to apply the function.
+
+-- Pure
+
+raiseToList :: Maybe Int -> [Maybe Int]
+raiseToList = pure -- raiseToList x = pure x
+-- pure: raises input to relevant context, specified by type of output
+
+mulMaybe :: Maybe Int -> Maybe Int -> Maybe Int
+mulMaybe x y = (*) <$> x <*> y
+
+pairMaybe :: Maybe a -> Maybe b -> Maybe (a,b)
+pairMaybe x y = (,) <$> x <*> y
+-- (,) <$> x -> partially applied function in the Maybe space
+-- If Just x, (,) <$> x = Just (\b -> (a,b)) (i.e. just need a b to complete the pair)
+-- If Nothing, (,) <$> x = Nothing (recall <$> does not apply f to x if x is Nothing)
+-- Then <*> applies y to (,) <$>.
+
+-- f <$> x <*> y == liftA2 f x y
+
+sum3 :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe Int
+sum3 x y z = (+) <$> ((+) <$> x <*> y) <*> z
+-- (+) <$> x creates the partial function (+ x): Just (\x -> x + y)
+-- (+) <$> x <*> y applies the partial function to y
+-- (+) <$> ((+) <$> x <*> y) creates the partial function (+ ((+) <$> x <*> y)): Just (\x y -> (+) <$> x <*> y) + z)
+-- (+) <$> ((+) <$> x <*> y) <*> z applies the partial function to z
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -527,3 +567,6 @@ main = do
                 ]
     print ((+1) <$> xs)
     print ((+50) <$> ys)
+    print (raiseToList (Just 3))
+    print (sum3 (Just 1) (Just 2) (Just 3))
+    print (sum3 (Just 1) (Just 2) Nothing) --Nothing because fmap of a partially applied function, in this case (+) <$> ((+) <$> x <*> y), to Nothing is Nothing
