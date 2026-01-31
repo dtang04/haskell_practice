@@ -510,6 +510,7 @@ instance Semigroup e => Applicative (Validation e) where
 
 pairV :: Validation [String] a -> Validation [String] b -> Validation [String] (a,b)
 pairV = liftA2 (,) --pairV a b = liftA2 (a b)
+-- Constrains polymorphic Semigroup e to be of type [String]
 
 main :: IO ()
 main = do
