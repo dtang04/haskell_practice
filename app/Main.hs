@@ -386,6 +386,7 @@ filter' lst =
 -- Keeps only lengths that are prime numbers
 
 -- Functors
+
 newtype Box' a = Box' a deriving (Show)
 
 instance Functor Box' where
@@ -406,13 +407,36 @@ data Tree a
 -- Tree is a * -> *
 
 instance Functor Tree where
-    fmap :: (a -> b) -> Tree a -> Tree b
     fmap f (Leaf a) = Leaf (f a)
     fmap f (Node l r) = Node (fmap f l) (fmap f r)
 
 -- Can only match data constructors, not type constructors
 -- So, Node (Tree x) (Tree y) will raise compile errors
--- We can only unpack at the Node level
+-- We can only unpack at the Node level, where l is Tree and r is Tree
+
+data Triple a b c = Triple a b c deriving (Show)
+
+instance Functor (Triple a b) where
+    fmap f (Triple a b c) = Triple a b (f c)
+
+-- Need (Triple a b) to get from * -> * -> * -> * to * -> *
+
+newtype AssocList k v = AssocList [(k, v)] deriving (Show)
+
+instance Functor (AssocList k) where
+    fmap f (AssocList x) = AssocList (go f x [])
+        where
+            go _ [] acc = reverse acc
+            go f ((k,v):xs) acc = go f xs ((k, f v):acc)
+
+newtype AssocEither a b c = AssocEither [(a, Either b c)] deriving (Show)
+
+instance Functor (AssocEither a b) where
+    fmap f (AssocEither x) = AssocEither (go x [])
+        where
+            go [] acc = reverse acc
+            go ((a, Left b):xs) acc = go xs ((a, Left b):acc)
+            go ((a, Right c):xs) acc = go xs ((a, Right (f c)):acc)
 
 main :: IO ()
 main = do
@@ -492,3 +516,14 @@ main = do
                 (Node (Leaf 2) (Leaf 3))         --           /  \
                                                  --        Leaf2 Leaf3                
     print ((*7) <$> t)
+    print ((/2) <$> Triple 1 2 3) -- 3 is forced to be a double, and GHC choose 1 and 2 to be Double by default
+    let
+        xs = AssocList [("a",1), ("b",2), ("c",3)]
+        ys =
+            AssocEither
+                [ ("x", Right 10)
+                , ("y", Left "err")
+                , ("z", Right 5)
+                ]
+    print ((+1) <$> xs)
+    print ((+50) <$> ys)
