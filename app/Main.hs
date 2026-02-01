@@ -130,6 +130,13 @@ lookupKV a b ((k,v):xs)
     | a == k && b == v  = Just (a,b)
     | otherwise         = lookupKV a b xs
 
+merge :: Ord a => [a] -> [a] -> [a]
+merge lst1 [] = lst1
+merge [] lst2 = lst2
+merge (x:xs) (y:ys)
+    |   x > y     = y : merge (x:xs) ys
+    |   otherwise = x : merge xs (y:ys)
+
 -- Types
 
 data Point = Point Int Int deriving (Show)
@@ -309,6 +316,22 @@ instance (Ord a, Ord b) => Ord (Pair a b) where
 
 instance (Show a, Show b) => Show (Pair a b) where
     show (Pair (a, b)) = "(" ++ Prelude.show a ++ ", " ++ Prelude.show b ++ ")" 
+
+data FileObject
+  = File String Int
+  | Directory String [FileObject]
+
+totalSize :: FileObject -> Int
+totalSize (File _ y) = y
+totalSize (Directory _ lst) = go lst 0
+    where
+        go [] acc = acc
+        go (File _ y:xs) acc = go xs (acc + y)
+        go (Directory _ lst':xs) acc = go lst' 0 + go xs acc
+
+totalSize' :: FileObject -> Int
+totalSize' (File _ y) = y
+totalSize' (Directory _ lst) = sum (map totalSize' lst) -- or foldr (+) 0 (map totalSize' lst)
 
 -- Sets
 s :: S.Set Int
@@ -725,3 +748,8 @@ main = do
     print (zipWithM' safeDiv [1,2,5,0,10] [1,2,0,25,52])
     print (zipWithM' safeDiv [1,2,5,0,10] [1,2,-1,25,52])
     print (mapAccumM step 0 [1,2,3,4,5])
+    print (merge [1,2,5,9] [4,5,7,8])
+    let
+        dir = Directory "root" [ File "a" 10, Directory "sub" [File "b" 5, File "c" 2], File "d" 1]
+    print (totalSize dir)
+    print (totalSize' dir)
