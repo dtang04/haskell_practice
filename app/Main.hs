@@ -512,6 +512,29 @@ pairV :: Validation [String] a -> Validation [String] b -> Validation [String] (
 pairV = liftA2 (,) --pairV a b = liftA2 (a b)
 -- Constrains polymorphic Semigroup e to be of type [String]
 
+newtype Env r a = Env (r -> a)
+-- Here, -> is being used as a type constructor
+
+instance Functor (Env r) where
+    fmap f (Env x) = Env (f . x)
+-- f :: a -> b
+-- x :: r -> a
+-- So, to go from r -> b, we have to go from r -> a -> b, which is a function composition.
+
+instance Applicative (Env r) where
+    pure :: a -> Env r a
+    pure a = Env (\_ -> a) -- Need to turn a into a function r -> a
+    (<*>) :: Env r (a -> b) -> Env r a -> Env r b
+    Env f <*> Env g = Env (\r -> (f r)(g r))    -- f :: r -> (a -> b) == r -> a -> b
+                                                -- g :: r -> a
+                                                -- Result must be r -> b
+                                                -- We need a function from (r -> (a -> b)) -> (r -> a) -> (r -> b)
+                                                -- First focus on the input. We need to taken in an r since our outputted function is r -> b
+                                                -- So focusing on f, we already have r. Now we need the input a to get b.
+                                                -- Thus we just have to apply g, which is r -> a. 
+                                                -- Then, this simplifies to f r a, which is b. So we get (f r)(g r)
+
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -612,3 +635,10 @@ main = do
         v1 = Failure ["err1"] :: Validation [String] Int
         v2 = Failure ["err2"] :: Validation [String] Int
     print (pairV v1 v2)
+    let 
+        (Env h) = pure 7
+        ef = Env (\r -> (+ r))
+        ex = Env (\r -> 10 * r)
+        (Env j) = ef <*> ex
+    print (h 999)
+    print (j 3)
