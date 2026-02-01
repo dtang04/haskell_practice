@@ -586,6 +586,19 @@ f2 x
     | even x    = Nothing
     | otherwise = Just True
 
+zipWithM' :: Monad m => (a -> b -> m c) -> [a] -> [b] -> m [c]
+zipWithM' _ [] _ = pure []
+zipWithM' _ _ [] = pure []
+zipWithM' f (x:xs) (y:ys) =
+    do
+        z <- f x y
+        rest <- zipWithM' f xs ys -- unwrap the monad with <-
+        pure (z : rest)
+
+safeDiv :: Int -> Int -> Either String Int
+safeDiv _ 0 = Left "Error: Divided by zero"
+safeDiv x y = Right (x `div` y)
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -698,3 +711,5 @@ main = do
     print (subChain fHelp 10)
     print (filterM' f2 [1,3,5,7])
     print (filterM' f2 [1,2,5,8])
+    print (zipWithM' safeDiv [1,2,5,0,10] [1,2,0,25,52])
+    print (zipWithM' safeDiv [1,2,5,0,10] [1,2,-1,25,52])
