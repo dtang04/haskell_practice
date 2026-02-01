@@ -527,13 +527,64 @@ instance Applicative (Env r) where
     pure :: a -> Env r a
     pure a = Env (\_ -> a) -- Need to turn a into a function r -> a
     (<*>) :: Env r (a -> b) -> Env r a -> Env r b
-    Env f <*> Env g = Env (\r -> f r (g r))    -- f :: r -> (a -> b) == r -> a -> b
+    Env f <*> Env g = Env (\r -> f r (g r))     -- f :: r -> (a -> b) == r -> a -> b
                                                 -- g :: r -> a
                                                 -- Result must be r -> b
                                                 -- We need a function from (r -> a -> b) -> (r -> a) -> (r -> b)
                                                 -- g r gives us an a
                                                 -- So, f r (g r) gives us r -> b
 
+-- Monads
+-- Monads are powerful because they allow for chains of dependent functions.
+-- Crucial function: 
+-- (>>=) :: m a -> (a -> m b) -> m b
+
+incM :: Monad m => m Int -> m Int
+incM m = 
+    do
+        x <- m -- m >>= \x -> pure (x + 1)
+        pure (x + 1)
+
+applyM :: Monad m => (a -> m b) -> m a -> m b
+applyM f a =
+    do
+        x <- a -- x <- a is equivalent to a >>= \x -> rest
+               -- x is a value, rest is of type m b (another Monad)
+               -- >>= takes the input monad, takes the continuation (\x), and returns a new Monad
+        f x
+
+subChain :: Monad m => (Int -> m Int) -> Int -> m Int
+subChain f n = 
+    do
+        m <- f n
+        subChain f m --recurse by passing in value m
+
+fHelp :: Int -> Maybe Int
+fHelp x = if x >= 3 then Just (x - 3) else Nothing
+
+bind2 :: Monad m => (a -> b -> c) -> m a -> m b -> m c
+bind2 f x y =
+    do
+        m <- x
+        n <- y
+        pure (f m n)
+
+filterM' :: Monad m => (a -> m Bool) -> [a] -> m [a]
+filterM' _ [] = pure []
+filterM' f x = go f x []
+    where
+        go _ [] acc = pure (reverse acc)
+        go f (y:ys) acc = 
+            do
+                z <- f y 
+                if z  
+                then go f ys (y:acc)
+                else go f ys acc
+
+f2 :: Int -> Maybe Bool
+f2 x
+    | even x    = Nothing
+    | otherwise = Just True
 
 main :: IO ()
 main = do
@@ -642,3 +693,8 @@ main = do
         (Env j) = ef <*> ex
     print (h 999)
     print (j 3)
+    print (incM (Just 3))
+    print (incM [1,2,3])
+    print (subChain fHelp 10)
+    print (filterM' f2 [1,3,5,7])
+    print (filterM' f2 [1,2,5,8])
