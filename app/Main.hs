@@ -502,7 +502,9 @@ instance Functor (Validation e) where
     fmap f (Success a) = Success (f a)
 
 instance Semigroup e => Applicative (Validation e) where
-    pure = Success
+    pure :: Semigroup e => a -> Validation e a
+    pure = Success -- pure a = Success a
+    (<*>) :: Semigroup e => Validation e (a -> b) -> Validation e a -> Validation e b
     Success f <*> Success a = Success (f a)
     Success _ <*> Failure a = Failure a
     Failure f <*> Success _ = Failure f
@@ -525,14 +527,12 @@ instance Applicative (Env r) where
     pure :: a -> Env r a
     pure a = Env (\_ -> a) -- Need to turn a into a function r -> a
     (<*>) :: Env r (a -> b) -> Env r a -> Env r b
-    Env f <*> Env g = Env (\r -> (f r)(g r))    -- f :: r -> (a -> b) == r -> a -> b
+    Env f <*> Env g = Env (\r -> f r (g r))    -- f :: r -> (a -> b) == r -> a -> b
                                                 -- g :: r -> a
                                                 -- Result must be r -> b
-                                                -- We need a function from (r -> (a -> b)) -> (r -> a) -> (r -> b)
-                                                -- First focus on the input. We need to taken in an r since our outputted function is r -> b
-                                                -- So focusing on f, we already have r. Now we need the input a to get b.
-                                                -- Thus we just have to apply g, which is r -> a. 
-                                                -- Then, this simplifies to f r a, which is b. So we get (f r)(g r)
+                                                -- We need a function from (r -> a -> b) -> (r -> a) -> (r -> b)
+                                                -- g r gives us an a
+                                                -- So, f r (g r) gives us r -> b
 
 
 main :: IO ()
