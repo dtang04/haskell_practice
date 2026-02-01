@@ -599,6 +599,17 @@ safeDiv :: Int -> Int -> Either String Int
 safeDiv _ 0 = Left "Error: Divided by zero"
 safeDiv x y = Right (x `div` y)
 
+mapAccumM :: Monad m => (acc -> a -> m (acc, b)) -> acc -> [a] -> m (acc, [b])
+mapAccumM _ acc [] = pure (acc, [])
+mapAccumM f acc (x:xs) = 
+    do
+        (acc', x') <- f acc x
+        (f_acc, rest_xs) <- mapAccumM f acc' xs
+        pure (f_acc, x':rest_xs)
+
+step :: Int -> Int -> [(Int, Int)]
+step acc x = [(acc + x, acc + x), (acc - x, acc - x)]
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -713,3 +724,4 @@ main = do
     print (filterM' f2 [1,2,5,8])
     print (zipWithM' safeDiv [1,2,5,0,10] [1,2,0,25,52])
     print (zipWithM' safeDiv [1,2,5,0,10] [1,2,-1,25,52])
+    print (mapAccumM step 0 [1,2,3,4,5])
