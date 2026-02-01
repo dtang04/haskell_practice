@@ -11,4 +11,3 @@ main = do
     putStrLn ("# chars: " ++ show (length input)) --print calls show, but we just want to print the string as-is, so use putStrLn
     putStrLn ("# lines: " ++ show (length lines_lst))
     putStrLn ("# words " ++ show (length words_lst))
-    --Ctrl + D to exit
