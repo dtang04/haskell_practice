@@ -3,7 +3,7 @@ module Main where
 import GHC.Arr (accum)
 import qualified Data.Set as S
 import Data.Char (toLower, isDigit)
-
+import Data.Functor.Identity (Identity(..))
 -- Function Exercises
 dedup :: Eq a => [a] -> [a]
 dedup [] = []
@@ -633,6 +633,30 @@ mapAccumM f acc (x:xs) =
 step :: Int -> Int -> [(Int, Int)]
 step acc x = [(acc + x, acc + x), (acc - x, acc - x)]
 
+groupByM :: Monad m => (a -> a -> m Bool) -> [a] -> m [[a]]
+groupByM _ [] = pure []
+groupByM f lst = go f lst [] []
+    where
+        go _ [] acc [] = pure (reverse acc)
+        go _ [] acc buf = pure (reverse (reverse buf:acc)) --if we reach the end of the list, but we have an ongoing buffer, append onto acc
+        go f (x:xs) acc [] = go f xs acc [x] --assign first element to buffer
+        go f (x:xs) acc (b:bs) =  --comparing x to the buffer
+            do
+                eq <- f b x
+                if eq == True
+                then
+                    go f xs acc (x:b:bs) --append onto ongoing buffer
+                else
+                    go f xs (reverse (b:bs):acc) [x] --append reversed buffer onto acc, start new buffer
+
+incId :: Int -> Int -> Identity Bool
+incId fst snd = Identity {runIdentity = fst < snd}
+
+eqEither :: Int -> Int -> Either String Bool
+eqEither _ cur 
+    | cur == 999 = Left "Error: 999"
+eqEither prev cur           = Right (prev == cur)
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -753,3 +777,7 @@ main = do
         dir = Directory "root" [ File "a" 10, Directory "sub" [File "b" 5, File "c" 2], File "d" 1]
     print (totalSize dir)
     print (totalSize' dir)
+    print (groupByM incId [1,2,3,2,3,4])
+    print (groupByM eqEither [1,1,2,2])
+    print (groupByM eqEither [1,1,999,3,2])
+    print (groupByM eqEither [1,2,1,2,1,2])
