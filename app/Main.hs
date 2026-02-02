@@ -4,6 +4,7 @@ import GHC.Arr (accum)
 import qualified Data.Set as S
 import Data.Char (toLower, isDigit)
 import Data.Functor.Identity (Identity(..))
+import Data.Char (toUpper)
 -- Function Exercises
 dedup :: Eq a => [a] -> [a]
 dedup [] = []
@@ -557,10 +558,60 @@ instance Applicative (Env r) where
                                                 -- g r gives us an a
                                                 -- So, f r (g r) gives us r -> b
 
+
+zipWithA :: Applicative f => f a -> f b -> f (a, b)
+zipWithA = liftA2 (,) -- zipWithA f_a f_b = liftA2 (,) f_a f_b
+-- zipWithA f_a f_b = ((,) <$> f_a) <*> f_b
+
 -- Monads
 -- Monads are powerful because they allow for chains of dependent functions.
 -- Crucial function: 
 -- (>>=) :: m a -> (a -> m b) -> m b
+
+sequenceA' :: Applicative f => [f a] -> f [a]
+sequenceA' [] = pure []
+sequenceA' (f_a:xs) = (:) <$> f_a <*> sequenceA' xs
+-- E.g. [Just 1, Just 2, Just 3]
+-- sequenceA' xs = Just [2, 3]
+-- (:) <$> f_a = Just 1:
+-- (:) <$> f_a <*> = (Just 1:)(Just [2,3])) -- applies function (:) on f a to f b
+-- Result: Just [1,2,3]
+
+traverseA' :: Applicative f => (a -> f b) -> [a] -> f [b]
+traverseA' _ [] = pure []
+traverseA' f (a:as) = (:) <$> f a <*> (traverseA' f as)
+
+newtype Parser a = Parser {runParser :: String -> [(a, String)]}
+
+instance Functor Parser where
+    fmap :: (a -> b) -> Parser a -> Parser b
+    fmap f (Parser pa) = Parser {runParser = (\s -> [(f a, s') | (a, s') <- pa s])}
+
+-- <$>:
+-- pa is of type String -> [(a, String)]
+-- (a -> b) -> (String -> [(a, String)]) -> (String -> [(b, String)])
+-- RHS of list comprehension unwraps the outer list, iterating over all elements of the outer list
+instance Applicative Parser where
+    pure :: a -> Parser a
+    pure a = Parser {runParser=(\v -> [(a, v)])}
+
+    (<*>) :: Parser (a -> b) -> Parser a -> Parser b
+    Parser f_pa <*> Parser pa = Parser {runParser = (\s -> [(f a, s'') | (f, s') <- f_pa s, (a, s'') <- pa s'])}
+
+-- <*>:
+-- f_pa is of type String -> [((a->b), String]
+-- pa is of type String -> [(a, String)]
+-- (String -> [((a->b), String]) -> (String -> [(a, String)]) -> (String -> [(b, String)]) 
+-- Need to run transform s twice by running it through f_pa and pa
+
+item :: Parser Char
+item = Parser {runParser = \s -> case s of 
+                                    [] -> []    
+                                    (x:xs) -> [(x, xs)]}
+
+-- runParser ((,) <$> item <*> item) "abcd"
+-- (,) <$> item = ("a", ? ), "bcd" passed onto next Parser, ? to be filled by next Parser
+-- (,) <$> item <*> item = [(("a", "b"), "cd")] (final xs is "cd")
 
 incM :: Monad m => m Int -> m Int
 incM m = 
@@ -638,16 +689,16 @@ groupByM _ [] = pure []
 groupByM f lst = go f lst [] []
     where
         go _ [] acc [] = pure (reverse acc)
-        go _ [] acc buf = pure (reverse (reverse buf:acc)) --if we reach the end of the list, but we have an ongoing buffer, append onto acc
-        go f (x:xs) acc [] = go f xs acc [x] --assign first element to buffer
-        go f (x:xs) acc (b:bs) =  --comparing x to the buffer
+        go _ [] acc buf = pure (reverse (reverse buf:acc)) --i f we reach the end of the list, but we have an ongoing buffer, append onto acc
+        go f (x:xs) acc [] = go f xs acc [x] -- assign first element to buffer
+        go f (x:xs) acc (b:bs) =  -- comparing x to the buffer
             do
                 eq <- f b x
                 if eq == True
                 then
-                    go f xs acc (x:b:bs) --append onto ongoing buffer
+                    go f xs acc (x:b:bs) -- append onto ongoing buffer
                 else
-                    go f xs (reverse (b:bs):acc) [x] --append reversed buffer onto acc, start new buffer
+                    go f xs (reverse (b:bs):acc) [x] -- append reversed buffer onto acc, start new buffer
 
 incId :: Int -> Int -> Identity Bool
 incId fst snd = Identity {runIdentity = fst < snd}
@@ -748,7 +799,7 @@ main = do
     print ((+50) <$> ys)
     print (raiseToList (Just 3))
     print (sum3 (Just 1) (Just 2) (Just 3))
-    print (sum3 (Just 1) (Just 2) Nothing) --Nothing because fmap of a partially applied function, in this case (+) <$> ((+) <$> x <*> y), to Nothing is Nothing
+    print (sum3 (Just 1) (Just 2) Nothing) -- Nothing because fmap of a partially applied function, in this case (+) <$> ((+) <$> x <*> y), to Nothing is Nothing
     print (keepRight (Just 1) (Just 2))
     print (mulAdd (Just 2) (Just 7) (Just 15))
     print (makeUser (Right "a") (Right 15))
@@ -781,3 +832,9 @@ main = do
     print (groupByM eqEither [1,1,2,2])
     print (groupByM eqEither [1,1,999,3,2])
     print (groupByM eqEither [1,2,1,2,1,2])
+    print (zipWithA (Just 3) (Just 4))
+    print (zipWithA [1,2] ["a","b"])
+    print (sequenceA' [Just 1, Just 2, Just 3])
+    print (traverseA' (\x -> Just (x*2)) [1,2,3])
+    print (runParser ((,) <$> item <*> item) "abcd")
+    print (runParser (fmap toUpper item) "abc")
