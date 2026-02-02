@@ -788,7 +788,26 @@ foldM' f acc (x:xs) =
     do
         i <- f acc x
         foldM' f i xs
-        
+
+data Either' l r
+    = Left' l
+    | Right' r deriving (Eq, Show)
+
+
+instance Functor (Either' a) where
+    fmap _ (Left' a) = Left' a
+    fmap f (Right' b) = Right' (f b)
+
+instance Applicative (Either' a) where
+    pure = Right' 
+    _ <*> Left' e = Left' e
+    Left' e <*> _ = Left' e
+    Right' f <*> Right' a = Right' (f a)
+
+instance Monad (Either' a) where
+    Left' a >>= _ = Left' a
+    Right' a >>= f = f a
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -928,3 +947,8 @@ main = do
     print (mapM' (\x -> if x > 0 then Just x else Nothing) [1,2,-3])
     print (foldM' (\acc x -> Just (acc + x)) 0 [1,2,3])
     print (foldM' (\acc x -> if x < 0 then Nothing else Just (acc + x)) 0 [1,2,-3,4])
+    print (Right' (+1) <*> Right' 3 :: Either' String Int)
+    print (Left' "error" <*> Right' 3 :: Either' String Int)
+    print (fmap (+1) (Right' 5) :: Either' String Int)
+    print (fmap (\x -> x+1) (Left' "err") :: Either' String Int)
+    print ((Right' 5) >>= (\x -> if x `mod` 2 == 0 then Right' x else Left' "err") :: Either' String Int)
