@@ -2,7 +2,7 @@
 module Main where
 import GHC.Arr (accum)
 import qualified Data.Set as S
-import Data.Char (toLower, isDigit)
+import Data.Char (isLower, toLower, isDigit)
 import Data.Functor.Identity (Identity(..))
 import Data.Char (toUpper)
 import Control.Applicative (liftA3)
@@ -89,6 +89,13 @@ zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
 zipWith' _ [] _ = []
 zipWith' _ _ [] = []
 zipWith' f (x:xs) (y:ys) = f x y : (zipWith' f xs ys)
+
+flatten' :: [[a]] -> [a]
+flatten' [] = []
+flatten' lst = go lst []
+    where
+        go [] acc = acc
+        go (x:xs) acc = go xs (acc ++ x)
 
 zipWithLeftOverLst1 :: (a -> b -> a) -> [a] -> [b] -> [a]
 -- notice that to keep the left over elements from lst1, f must be a -> b -> a
@@ -410,6 +417,28 @@ filter' lst =
     -- contains a digit
 -- Converts each remaining string to its length
 -- Keeps only lengths that are prime numbers
+
+processStrings :: [String] -> [String]
+processStrings [] = []
+processStrings lst = 
+    let
+        isLowerStr [] = False
+        isLowerStr (fst:_) 
+            | isLower fst == True = True
+            | otherwise              = False
+
+        existsVowel [] = False
+        existsVowel (fst:rest)
+            | let lower = toLower fst
+              , lower == 'a' || lower == 'e' || lower == 'i' || lower == 'o' || lower == 'u' = True
+            | otherwise                                                          = existsVowel rest 
+    in  map reverse (filter existsVowel (filter isLowerStr lst))
+
+-- keeps only strings that:
+-- start with a lowercase letter
+-- contain at least one vowel
+-- reverses each remaining string
+-- returns the resulting list of strings
 
 -- Functors
 
@@ -867,3 +896,5 @@ main = do
     print (applyTwiceA (Just (+1)) (Just 3))
     print (applyBothA (Just (+1)) (Just (*2)) (Just 10))
     print (apPairA (Just (+)) (Just (3,4)))
+    print (flatten' [[1,2], [3,4], [4,5,6]])
+    print (processStrings ["Hello", "nice", "To", "meet", "you", "!"])
