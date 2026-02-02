@@ -5,6 +5,8 @@ import qualified Data.Set as S
 import Data.Char (toLower, isDigit)
 import Data.Functor.Identity (Identity(..))
 import Data.Char (toUpper)
+import Control.Applicative (liftA3)
+
 -- Function Exercises
 dedup :: Eq a => [a] -> [a]
 dedup [] = []
@@ -542,10 +544,11 @@ newtype Env r a = Env (r -> a)
 -- Here, -> is being used as a type constructor
 
 instance Functor (Env r) where
+    fmap :: (a -> b) -> Env r a -> Env r b
     fmap f (Env x) = Env (f . x)
--- f :: a -> b
+-- f :: c -> d
 -- x :: r -> a
--- So, to go from r -> b, we have to go from r -> a -> b, which is a function composition.
+-- So, to go from r -> b, we have to go from (r -> a) -> b, which is a function composition. (c = r -> a)
 
 instance Applicative (Env r) where
     pure :: a -> Env r a
@@ -557,6 +560,22 @@ instance Applicative (Env r) where
                                                 -- We need a function from (r -> a -> b) -> (r -> a) -> (r -> b)
                                                 -- g r gives us an a
                                                 -- So, f r (g r) gives us r -> b
+
+applyTwiceA :: Applicative f => f (a -> a) -> f a -> f a
+-- liftA2 :: Applicative f => (x -> y -> z) -> f x -> f y -> f z
+-- f = f (a -> a), so x = (a -> a)
+-- g = f a, so y = a
+-- (x -> y -> z) = (a -> a) -> a -> a
+applyTwiceA f g = liftA2 (\f x -> f (f x)) f g 
+
+applyBothA :: Applicative f => f (a -> b) -> f (a -> c) -> f a -> f (b, c)
+-- liftA2 :: Applicative f => (w -> x -> y -> z) -> f w -> f x -> f y -> f z
+-- w = (a -> b)
+-- x = (a -> c)
+-- y = a
+-- z = (b, c)
+-- (w -> x -> y -> z) = (a -> b) -> (a -> c) -> a -> (b, c)
+applyBothA w x y = liftA3 (\f g a -> (f a, g a)) w x y
 
 
 zipWithA :: Applicative f => f a -> f b -> f (a, b)
@@ -838,3 +857,5 @@ main = do
     print (traverseA' (\x -> Just (x*2)) [1,2,3])
     print (runParser ((,) <$> item <*> item) "abcd")
     print (runParser (fmap toUpper item) "abc")
+    print (applyTwiceA (Just (+1)) (Just 3))
+    print (applyBothA (Just (+1)) (Just (*2)) (Just 10))
