@@ -136,6 +136,36 @@ lookup' a ((k,v):xs)
     | a == k     = Just v
     | otherwise  = lookup' a xs
 
+compress :: Eq a => [a] -> [a]
+compress [] = []
+compress [a] = [a]
+compress (x:y:xs)
+    |   x == y          = compress (x:xs)
+    |   otherwise       = x : compress(y:xs)
+        
+interleave :: [a] -> [a] -> [a]
+interleave [] _ = []
+interleave _ [] = []
+interleave (x:xs) (y:ys) = x : y : interleave xs ys
+
+mapF :: (a -> b) -> [a] -> [b]
+mapF _ [] =[]
+mapF f lst = foldr build [] lst
+-- foldr: (a -> b -> b) -> b -> [a] -> b
+-- foldr build [] [a,b] = build a (build b []), right to left construction
+    where
+        build a acc = f a : acc
+
+filterF :: (a -> Bool) -> [a] -> [a]
+filterF _ [] = []
+filterF f lst = foldr build [] lst
+    -- foldr :: (a -> b -> b) -> b -> [a] -> b
+    -- [a,b,c] -> build (a, build (b, build (c, [])))
+    where
+        build a acc
+            |   f a         = a:acc
+            |   otherwise   = acc
+
 lookupifEven' :: (Eq a, Integral b) => a -> [(a, b)] -> Maybe b
 lookupifEven' a lst = 
     case lookup' a lst of
@@ -420,7 +450,7 @@ filter' lst =
         lst'' = filter (\x -> length x >= 3) lst'
         lst''' = map length (filter (not . checkDigit) lst'')
     in filter isPrime lst'''
-        
+
 -- Takes a list of strings
 -- Converts each string to lowercase
 -- Removes any string that:
@@ -616,7 +646,7 @@ applyTwiceA :: Applicative f => f (a -> a) -> f a -> f a
 applyTwiceA f g = liftA2 (\f x -> f (f x)) f g 
 
 applyBothA :: Applicative f => f (a -> b) -> f (a -> c) -> f a -> f (b, c)
--- liftA2 :: Applicative f => (w -> x -> y -> z) -> f w -> f x -> f y -> f z
+-- liftA2 :: Applicative f => f (w -> x -> y -> z) -> f w -> f x -> f y -> f z
 -- w = (a -> b)
 -- x = (a -> c)
 -- y = a
@@ -952,3 +982,7 @@ main = do
     print (fmap (+1) (Right' 5) :: Either' String Int)
     print (fmap (\x -> x+1) (Left' "err") :: Either' String Int)
     print ((Right' 5) >>= (\x -> if x `mod` 2 == 0 then Right' x else Left' "err") :: Either' String Int)
+    print (compress [1,1,2,2,2,3,1,1])
+    print (interleave ([1,2,3] :: [Int]) ([4,5,6] :: [Int]))
+    print (mapF (*2) [1,2,3,4])
+    print (filterF even [1,2,3,4])
