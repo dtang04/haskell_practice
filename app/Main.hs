@@ -513,6 +513,13 @@ mulAdd x y = liftA2 (*) (liftA2 (+) x y)
 -- mulAdd x y z = liftA2 (*) (liftA2 (+) x y) z
 -- or (+) <$> ((*) <$> x <*> y) <*> z
 
+apPairA :: Applicative f => f (a -> b -> c) -> f (a, b) -> f c
+-- liftA2 f (a -> b -> c) -> f (a, b) -> f c
+-- (a -> b -> c) -> (a, b) -> c
+-- \f (y,z) -> f y z
+apPairA x y = liftA2 (\f (y,z) -> f y z) x y
+
+
 makeUser :: Either String String -> Either String Int -> Either String (String, Int)
 makeUser = liftA2 (,)
 -- makeUser x y = liftA2 (,) x y 
@@ -859,3 +866,4 @@ main = do
     print (runParser (fmap toUpper item) "abc")
     print (applyTwiceA (Just (+1)) (Just 3))
     print (applyBothA (Just (+1)) (Just (*2)) (Just 10))
+    print (apPairA (Just (+)) (Just (3,4)))
