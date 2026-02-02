@@ -97,6 +97,17 @@ flatten' lst = go lst []
         go [] acc = acc
         go (x:xs) acc = go xs (acc ++ x)
 
+singleWords :: [String] -> [String]
+singleWords lst = 
+    let
+        isSingleWord st
+            |   length (words st) > 1   = False
+            |   otherwise               = True
+
+        lowercase [] = []
+        lowercase (s:rest) = toLower s : lowercase rest
+    in map lowercase (filter isSingleWord lst)
+
 zipWithLeftOverLst1 :: (a -> b -> a) -> [a] -> [b] -> [a]
 -- notice that to keep the left over elements from lst1, f must be a -> b -> a
 -- The return type of zipWithLeftOverLst1 is [a], not [c]
@@ -898,3 +909,4 @@ main = do
     print (apPairA (Just (+)) (Just (3,4)))
     print (flatten' [[1,2], [3,4], [4,5,6]])
     print (processStrings ["Hello", "nice", "To", "meet", "you", "!"])
+    print (singleWords ["Hello World!", "Hello", "hi", "UPPER", "lowercase", "lower case"])
