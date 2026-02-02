@@ -774,6 +774,21 @@ eqEither _ cur
     | cur == 999 = Left "Error: 999"
 eqEither prev cur           = Right (prev == cur)
 
+mapM' :: Monad m => (a -> m b) -> [a] -> m [b]
+mapM' _ [] = pure []
+mapM' f (x:xs) = 
+    do
+        x_m <- f x
+        rest <- mapM' f xs
+        pure (x_m : rest)
+
+foldM' :: Monad m => (b -> a -> m b) -> b -> [a] -> m b
+foldM' _ acc [] = pure acc
+foldM' f acc (x:xs) = 
+    do
+        i <- f acc x
+        foldM' f i xs
+        
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -910,3 +925,6 @@ main = do
     print (flatten' [[1,2], [3,4], [4,5,6]])
     print (processStrings ["Hello", "nice", "To", "meet", "you", "!"])
     print (singleWords ["Hello World!", "Hello", "hi", "UPPER", "lowercase", "lower case"])
+    print (mapM' (\x -> if x > 0 then Just x else Nothing) [1,2,-3])
+    print (foldM' (\acc x -> Just (acc + x)) 0 [1,2,3])
+    print (foldM' (\acc x -> if x < 0 then Nothing else Just (acc + x)) 0 [1,2,-3,4])
