@@ -951,6 +951,22 @@ peekAfterAdd a =
         new <- get -- read the new state
         return (org, new)
 
+-- Using modify :: (s -> s) -> State s () (State s () == State ((), s))
+doubleState :: State Int ()
+doubleState = modify (*2)
+
+-- Using gets :: (s -> a) -> State s a
+-- returns State (f s, s)
+peekTriple :: State Int Int
+peekTriple = gets (*3)
+
+addAndReturnNew :: Int -> State Int Int
+addAndReturnNew a =
+    do
+        x <- gets (+a) 
+        put x
+        return x
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -1108,3 +1124,6 @@ main = do
     print (runState doubleRead 20)
     print (runState (swapWith 15) 10)
     print (runState (peekAfterAdd 15) 10)
+    print (runState doubleState 10)
+    print (runState peekTriple 10)
+    print (runState (addAndReturnNew 15) 10)
