@@ -6,6 +6,7 @@ import Data.Char (isLower, toLower, isDigit)
 import Data.Functor.Identity (Identity(..))
 import Data.Char (toUpper)
 import Control.Applicative (liftA3)
+import Control.Monad.State
 
 -- Function Exercises
 dedup :: Eq a => [a] -> [a]
@@ -838,13 +839,14 @@ instance Monad (Either' a) where
     Left' a >>= _ = Left' a
     Right' a >>= f = f a
 
+
 -- States
-{-
-    newtype State s a = State { runState :: s -> (a,s) } 
+-- newtype State s a = State { runState :: s -> (a, s) }
     -- wraps a function that goes from s -> (a, s)
     -- a is the output value
     -- s is the output state
 
+{-
     instance Functor (State s) where
     
     fmap :: (a -> b) -> f a -> f b
@@ -885,8 +887,38 @@ instance Monad (Either' a) where
     -- runState unwraps the State wrapper of ma, revealing the function
     -- Apply the function to s to get (a,t)
     -- Get new monadic state b by applying f :: (a -> m b) to a
-    -- Unwrap b, revaling the function, and apply to state t.
+    -- Unwrap b, revealing the function, and apply to state t.
 -}
+{-
+get :: State s s
+get = State {runState= \s -> (s, s)}
+-}
+
+tick :: State Int Int
+tick = state $ \s -> (s, s+1)
+
+{-
+put :: s -> State s ()
+put t = State {runState = \_ -> ((), t)}
+-- Replaces old state with new state
+-- runState (put newState) oldState is ((), newState)
+-- take t, store as the new state, and discard a
+-}
+
+replace :: Int -> State Int Int
+replace x = state $ \_ -> (x, x)
+
+addAndReturnOld :: Int -> State Int Int
+addAndReturnOld x = state $ \y -> (y, x+y)
+
+doubleThenAdd :: Int -> State Int Int
+doubleThenAdd a = 
+    do
+        x <- get -- gets second argument (to put into state)
+        let x' =  2 * x + a
+        put x' -- just thread the second argument forward, y <- put x' assigns the a to y
+        return x' -- returns the current state
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -1035,3 +1067,8 @@ main = do
     print (interleave ([1,2,3] :: [Int]) ([4,5,6] :: [Int]))
     print (mapF (*2) [1,2,3,4])
     print (filterF even [1,2,3,4])
+    print (runState get 8)
+    print (runState (put 11) 5)
+    print (runState (replace 50) 10)
+    print (runState (addAndReturnOld 5) 10)
+    print (runState (doubleThenAdd 10) 15)
