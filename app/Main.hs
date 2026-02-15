@@ -927,6 +927,21 @@ bumpTwiceReturnOld =
         put x'
         return x
 
+doubleRead :: State Int (Int, Int)
+doubleRead = 
+    do 
+        x <- get
+        y <- get
+        return (x,y) -- Insert output channel to be (x,y), the two reads
+                     -- State channel flows through do
+
+swapWith :: Int -> State Int Int
+swapWith a = 
+    do
+        x <- get -- gets existing state
+        put a    -- sets a as state channel
+        return x -- sets x as output channel
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -1081,3 +1096,5 @@ main = do
     print (runState (addAndReturnOld 5) 10)
     print (runState (doubleThenAdd 10) 15)
     print (runState bumpTwiceReturnOld 15)
+    print (runState doubleRead 20)
+    print (runState (swapWith 15) 10)
