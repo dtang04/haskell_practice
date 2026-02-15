@@ -914,10 +914,18 @@ addAndReturnOld x = state $ \y -> (y, x+y)
 doubleThenAdd :: Int -> State Int Int
 doubleThenAdd a = 
     do
-        x <- get -- gets second argument (to put into state)
+        x <- get -- gets the current state when called, threads state forward. Ex. runstate get 5 returns (5,5)
         let x' =  2 * x + a
-        put x' -- just thread the second argument forward, y <- put x' assigns the a to y
-        return x' -- returns the current state
+        put x' -- creates state, sets the output state to x', and thread it forward.
+        return x' -- set x' into result channel, so state now is (x', x')
+
+bumpTwiceReturnOld :: State Int Int
+bumpTwiceReturnOld =
+    do
+        x <- get
+        let x' = x + 2
+        put x'
+        return x
 
 main :: IO ()
 main = do
@@ -1072,3 +1080,4 @@ main = do
     print (runState (replace 50) 10)
     print (runState (addAndReturnOld 5) 10)
     print (runState (doubleThenAdd 10) 15)
+    print (runState bumpTwiceReturnOld 15)
