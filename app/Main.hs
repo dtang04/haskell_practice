@@ -838,6 +838,55 @@ instance Monad (Either' a) where
     Left' a >>= _ = Left' a
     Right' a >>= f = f a
 
+-- States
+{-
+    newtype State s a = State { runState :: s -> (a,s) } 
+    -- wraps a function that goes from s -> (a, s)
+    -- a is the output value
+    -- s is the output state
+
+    instance Functor (State s) where
+    
+    fmap :: (a -> b) -> f a -> f b
+    
+    fmap f ma = State $ \st ->
+    let (a,t) = runState ma st
+    in (f a,t)
+
+    instance Applicative (State s) where
+    pure  :: a -> f a
+    (<*>) :: f (a -> b) -> f a -> f b
+
+    pure a = State $ \s -> (a,s)
+
+    af <*> aa = State $ \st ->
+        let (f,t) = (runState af) st
+            (a,u) = (runState aa) t
+        in (f a, u)
+
+    -- af :: State s (a -> b)
+    -- runState af st - unwraps af and applies its function to st
+    -- returns back the f :: a -> b, and new state t (updated state of first run)
+
+    -- aa :: State s a
+    -- runstate aa t - unwraps aa and applies its function to t
+    -- returns back a :: a, u :: st
+
+    -- So, in (f a, u) applies f to a, resulting in b
+
+    instance Monad (State s) where
+    ma >>= f = State $ \s -> 
+        let (a,t) = runState ma s
+            mb = f a
+            (b,u) = runState mb t
+        in (b,u)
+    
+    -- m a -> (a -> m b) -> m b
+    -- runState unwraps the State wrapper of ma, revealing the function
+    -- Apply the function to s to get (a,t)
+    -- Get new monadic state b by applying f :: (a -> m b) to a
+    -- Unwrap b, revaling the function, and apply to state t.
+-}
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
