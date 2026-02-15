@@ -942,6 +942,15 @@ swapWith a =
         put a    -- sets a as state channel
         return x -- sets x as output channel
 
+peekAfterAdd :: Int -> State Int (Int, Int)
+peekAfterAdd a = 
+    do
+        org <- get
+        let sum = org + a
+        put sum
+        new <- get -- read the new state
+        return (org, new)
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -1098,3 +1107,4 @@ main = do
     print (runState bumpTwiceReturnOld 15)
     print (runState doubleRead 20)
     print (runState (swapWith 15) 10)
+    print (runState (peekAfterAdd 15) 10)
