@@ -967,6 +967,14 @@ addAndReturnNew a =
         put x
         return x
 
+doubleIfOdd :: State Int Bool
+doubleIfOdd =
+    do
+        x <- get
+        let y = even x
+        if not y then put (x*2) else put x
+        return y   
+        
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -1127,3 +1135,5 @@ main = do
     print (runState doubleState 10)
     print (runState peekTriple 10)
     print (runState (addAndReturnNew 15) 10)
+    print (runState doubleIfOdd 17)
+    print (runState doubleIfOdd 30)
