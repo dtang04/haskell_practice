@@ -980,6 +980,15 @@ doubleIfOdd =
         else
             return y
         
+-- Semigroups
+newtype MaxInt = MaxInt Int deriving (Show, Eq)
+
+instance Semigroup MaxInt where
+    (<>) (MaxInt a) (MaxInt b) = MaxInt (max a b)
+
+instance Monoid MaxInt where
+    mempty = MaxInt minBound --smallest possible representable integer
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -1142,3 +1151,5 @@ main = do
     print (runState (addAndReturnNew 15) 10)
     print (runState doubleIfOdd 17)
     print (runState doubleIfOdd 30)
+    print (MaxInt 4 <> MaxInt 5)
+    print (mempty :: MaxInt)
