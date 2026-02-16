@@ -1,4 +1,6 @@
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE DerivingStrategies #-}
+
 module Main where
 import GHC.Arr (accum)
 import qualified Data.Set as S
@@ -981,6 +983,13 @@ doubleIfOdd =
             return y
         
 -- Semigroups
+-- Must support <> - concatentation
+
+-- Monoid
+-- Must implement Semigroups first
+-- Must include mempty, which signifies the empty value (typically the smallest value)
+-- must satisfy mempty <> x = x
+
 newtype MaxInt = MaxInt Int deriving (Show, Eq)
 
 instance Semigroup MaxInt where
@@ -988,6 +997,14 @@ instance Semigroup MaxInt where
 
 instance Monoid MaxInt where
     mempty = MaxInt minBound --smallest possible representable integer
+
+data Stats = Stats Int Int deriving (Show, Eq)
+
+instance Semigroup Stats where
+    (<>) (Stats a1 b1) (Stats a2 b2) = Stats (a1+a2) (b1*b2)
+
+instance Monoid Stats where
+    mempty = Stats 0 1 
 
 main :: IO ()
 main = do
@@ -1153,3 +1170,5 @@ main = do
     print (runState doubleIfOdd 30)
     print (MaxInt 4 <> MaxInt 5)
     print (mempty :: MaxInt)
+    print (Stats 2 3 <> Stats 4 5)
+    print ((mempty :: Stats) <> Stats 4 5)
