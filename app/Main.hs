@@ -971,9 +971,14 @@ doubleIfOdd :: State Int Bool
 doubleIfOdd =
     do
         x <- get
-        let y = even x
-        if not y then put (x*2) else put x
-        return y   
+        let y = odd x
+        if y
+        then 
+            do
+                put (x*2)
+                return y
+        else
+            return y
         
 main :: IO ()
 main = do
