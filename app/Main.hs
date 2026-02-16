@@ -9,6 +9,7 @@ import Data.Functor.Identity (Identity(..))
 import Data.Char (toUpper)
 import Control.Applicative (liftA3)
 import Control.Monad.State
+import Data.Semigroup
 
 -- Function Exercises
 dedup :: Eq a => [a] -> [a]
@@ -1006,6 +1007,21 @@ instance Semigroup Stats where
 instance Monoid Stats where
     mempty = Stats 0 1 
 
+data Maybe' a
+    = Just' a
+    | Nothing' deriving (Show, Eq)
+
+instance Semigroup a => Semigroup (Maybe' a) where
+    (<>) Nothing' b = b -- if one argument is nothing, just return the other Maybe-wrapped value.
+    (<>) a Nothing' = a
+    (<>) (Just' a) (Just' b) = Just' (a <> b)
+
+instance Semigroup a => Monoid (Maybe' a) where
+    -- Monoid Maybe' requires semigroup Maybe'
+    -- Semigroup Maybe' requires a to be a semigroup
+    -- So Monoid requires a to be a semigroup
+    mempty = Nothing'
+
 main :: IO ()
 main = do
     print (dedup [1,1,2,2,3,3,3,4,4,5])
@@ -1172,3 +1188,7 @@ main = do
     print (mempty :: MaxInt)
     print (Stats 2 3 <> Stats 4 5)
     print ((mempty :: Stats) <> Stats 4 5)
+    print (Just' (Sum 3) <> Nothing')
+    print ((Nothing' <> Nothing') :: Maybe' (Sum Int))
+    print (mempty :: Maybe' (Sum Int))
+    print (Nothing' <> Just' (Sum 5))
